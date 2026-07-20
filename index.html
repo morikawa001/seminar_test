@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>テトリス</title>
+<title>ドッグテトリス</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; color: #eee; overflow: hidden; }
@@ -45,7 +45,7 @@ canvas { border: 2px solid #444; background: #0f0f23; }
     <canvas id="board" width="300" height="600"></canvas>
     <div class="combo-display" id="comboDisplay"></div>
     <div class="line-clear-flash" id="flash"></div>
-    <div id="overlay"><h1>テトリス</h1><p>Enterキーでスタート</p></div>
+    <div id="overlay"><h1>ドッグテトリス</h1><p>Enterキーでスタート</p></div>
   </div>
   <div class="side">
     <div class="panel">
@@ -110,13 +110,13 @@ const comboDisplay = document.getElementById('comboDisplay');
 const flash = document.getElementById('flash');
 
 const PIECES = {
-  I: { shape: [[0,0],[1,0],[2,0],[3,0]], color: '#00f0f0' },
-  O: { shape: [[0,0],[1,0],[0,1],[1,1]], color: '#f0f000' },
-  T: { shape: [[0,0],[1,0],[2,0],[1,1]], color: '#a000f0' },
-  S: { shape: [[1,0],[2,0],[0,1],[1,1]], color: '#00f000' },
-  Z: { shape: [[0,0],[1,0],[1,1],[2,1]], color: '#f00000' },
-  J: { shape: [[0,0],[0,1],[1,1],[2,1]], color: '#0000f0' },
-  L: { shape: [[2,0],[0,1],[1,1],[2,1]], color: '#f0a000' }
+  I: { shape: [[0,0],[1,0],[2,0],[3,0]], color: '#f0a050', dog: 'shiba' },
+  O: { shape: [[0,0],[1,0],[0,1],[1,1]], color: '#f5f0e0', dog: 'poodle' },
+  T: { shape: [[0,0],[1,0],[2,0],[1,1]], color: '#8090a0', dog: 'husky' },
+  S: { shape: [[1,0],[2,0],[0,1],[1,1]], color: '#d08040', dog: 'corgi' },
+  Z: { shape: [[0,0],[1,0],[1,1],[2,1]], color: '#e8e0d8', dog: 'dal' },
+  J: { shape: [[0,0],[0,1],[1,1],[2,1]], color: '#c8a870', dog: 'chi' },
+  L: { shape: [[2,0],[0,1],[1,1],[2,1]], color: '#d4a050', dog: 'lab' }
 };
 const PIECE_NAMES = Object.keys(PIECES);
 
@@ -160,6 +160,9 @@ function sfxHold() { playSound(440, 'sine', 0.1, 0.1); }
 function initGrid() {
   grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 }
+
+const COLOR_TO_DOG = {};
+Object.values(PIECES).forEach(p => { COLOR_TO_DOG[p.color] = p.dog; });
 
 function createBag() {
   const bag = [...PIECE_NAMES];
@@ -302,28 +305,158 @@ function hardDrop() {
 }
 
 function drawBlock(context, x, y, color, size) {
+  const px = x * size + 1;
+  const py = y * size + 1;
+  const s = size - 2;
+  const cx = px + s / 2;
+  const cy = py + s / 2;
+  const r = s / 2;
+  const dog = COLOR_TO_DOG[color] || 'shiba';
+
   context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  context.fillStyle = 'rgba(255,255,255,0.2)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 3);
-  context.fillStyle = 'rgba(0,0,0,0.15)';
-  context.fillRect(x * size + 1, y * size + size - 4, size - 2, 3);
+  context.beginPath();
+  context.arc(cx, cy, r, 0, Math.PI * 2);
+  context.fill();
+
+  if (dog === 'shiba') {
+    drawEarsPointy(context, cx, cy, r, '#d07030');
+    drawFace(context, cx, cy, r, '#fff', '#333', '#f06070');
+  } else if (dog === 'poodle') {
+    drawEarsCurly(context, cx, cy, r, '#e8ddd0');
+    drawFace(context, cx, cy, r, '#fff', '#333', '#f0a0a0');
+  } else if (dog === 'husky') {
+    drawEarsPointy(context, cx, cy, r, '#607080');
+    drawFace(context, cx, cy, r, '#dde8f0', '#2060a0', '#f0a0a0');
+  } else if (dog === 'corgi') {
+    drawEarsBig(context, cx, cy, r, '#e09040');
+    drawFace(context, cx, cy, r, '#f0e0c0', '#333', '#f08080');
+  } else if (dog === 'dal') {
+    drawEarsPointy(context, cx, cy, r, '#ccc');
+    drawSpots(context, cx, cy, r);
+    drawFace(context, cx, cy, r, '#fff', '#333', '#f0a0a0');
+  } else if (dog === 'chi') {
+    drawEarsBig(context, cx, cy, r, '#c0a060');
+    drawFace(context, cx, cy, r, '#e8d8b8', '#333', '#f08080');
+  } else if (dog === 'lab') {
+    drawEarsFloppy(context, cx, cy, r, '#b08030');
+    drawFace(context, cx, cy, r, '#f0d890', '#333', '#f08080');
+  }
+}
+
+function drawEarsPointy(context, cx, cy, r, earColor) {
+  context.fillStyle = earColor;
+  context.beginPath();
+  context.moveTo(cx - r * 0.7, cy - r * 0.5);
+  context.lineTo(cx - r * 0.2, cy - r * 0.95);
+  context.lineTo(cx - r * 0.1, cy - r * 0.4);
+  context.fill();
+  context.beginPath();
+  context.moveTo(cx + r * 0.7, cy - r * 0.5);
+  context.lineTo(cx + r * 0.2, cy - r * 0.95);
+  context.lineTo(cx + r * 0.1, cy - r * 0.4);
+  context.fill();
+}
+
+function drawEarsCurly(context, cx, cy, r, earColor) {
+  context.fillStyle = earColor;
+  context.beginPath();
+  context.arc(cx - r * 0.85, cy - r * 0.3, r * 0.35, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.arc(cx + r * 0.85, cy - r * 0.3, r * 0.35, 0, Math.PI * 2);
+  context.fill();
+}
+
+function drawEarsBig(context, cx, cy, r, earColor) {
+  context.fillStyle = earColor;
+  context.beginPath();
+  context.ellipse(cx - r * 0.8, cy - r * 0.2, r * 0.4, r * 0.6, -0.3, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.ellipse(cx + r * 0.8, cy - r * 0.2, r * 0.4, r * 0.6, 0.3, 0, Math.PI * 2);
+  context.fill();
+}
+
+function drawEarsFloppy(context, cx, cy, r, earColor) {
+  context.fillStyle = earColor;
+  context.beginPath();
+  context.ellipse(cx - r * 0.75, cy + r * 0.1, r * 0.25, r * 0.5, -0.2, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.ellipse(cx + r * 0.75, cy + r * 0.1, r * 0.25, r * 0.5, 0.2, 0, Math.PI * 2);
+  context.fill();
+}
+
+function drawSpots(context, cx, cy, r) {
+  context.fillStyle = '#444';
+  context.beginPath();
+  context.arc(cx - r * 0.3, cy + r * 0.2, r * 0.12, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.arc(cx + r * 0.4, cy + r * 0.35, r * 0.1, 0, Math.PI * 2);
+  context.fill();
+}
+
+function drawFace(context, cx, cy, r, faceColor, eyeColor, cheekColor) {
+  context.fillStyle = faceColor;
+  context.beginPath();
+  context.arc(cx, cy + r * 0.05, r * 0.55, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = eyeColor;
+  context.beginPath();
+  context.arc(cx - r * 0.25, cy - r * 0.1, r * 0.1, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.arc(cx + r * 0.25, cy - r * 0.1, r * 0.1, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = '#fff';
+  context.beginPath();
+  context.arc(cx - r * 0.22, cy - r * 0.13, r * 0.04, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.arc(cx + r * 0.28, cy - r * 0.13, r * 0.04, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = '#222';
+  context.beginPath();
+  context.arc(cx, cy + r * 0.15, r * 0.1, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = cheekColor;
+  context.globalAlpha = 0.35;
+  context.beginPath();
+  context.arc(cx - r * 0.4, cy + r * 0.15, r * 0.12, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.arc(cx + r * 0.4, cy + r * 0.15, r * 0.12, 0, Math.PI * 2);
+  context.fill();
+  context.globalAlpha = 1;
+
+  context.strokeStyle = '#555';
+  context.lineWidth = 0.8;
+  context.beginPath();
+  context.moveTo(cx, cy + r * 0.25);
+  context.quadraticCurveTo(cx - r * 0.15, cy + r * 0.42, cx - r * 0.25, cy + r * 0.35);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(cx, cy + r * 0.25);
+  context.quadraticCurveTo(cx + r * 0.15, cy + r * 0.42, cx + r * 0.25, cy + r * 0.35);
+  context.stroke();
 }
 
 function drawGhost() {
   let gy = 0;
   while (!collides(currentPiece, 0, gy + 1)) gy++;
   if (gy === 0) return;
+  ctx.globalAlpha = 0.2;
   currentPiece.blocks.forEach(([bx, by]) => {
     const px = currentPiece.x + bx;
     const py = currentPiece.y + by + gy;
-    if (py >= 0) {
-      ctx.globalAlpha = 0.25;
-      ctx.fillStyle = currentPiece.color;
-      ctx.fillRect(px * BLOCK + 2, py * BLOCK + 2, BLOCK - 4, BLOCK - 4);
-      ctx.globalAlpha = 1;
-    }
+    if (py >= 0) drawBlock(ctx, px, py, currentPiece.color, BLOCK);
   });
+  ctx.globalAlpha = 1;
 }
 
 function drawPiece(context, piece, offsetX, offsetY, size) {
@@ -351,22 +484,25 @@ function draw() {
 
   nctx.clearRect(0, 0, 110, 210);
   nextQueue.forEach((p, i) => {
-    const size = 20;
+    const size = 22;
     const np = PIECES[p.name];
     const ox = 1, oy = i * 4 + 1;
     np.shape.forEach(([bx, by]) => {
-      nctx.fillStyle = np.color;
-      nctx.fillRect((bx + ox) * size + 1, (by + oy) * size + 1, size - 2, size - 2);
+      drawBlock(nctx, bx + ox, by + oy, np.color, size);
     });
   });
 
   hctx.clearRect(0, 0, 110, 70);
   if (holdPiece) {
-    const size = 20;
+    const size = 22;
     const hp = PIECES[holdPiece.name];
     hp.shape.forEach(([bx, by]) => {
-      hctx.fillStyle = holdUsed ? '#555' : hp.color;
-      hctx.fillRect((bx + 1) * size + 1, (by + 1) * size + 1, size - 2, size - 2);
+      if (holdUsed) {
+        hctx.fillStyle = '#444';
+        hctx.fillRect((bx + 1) * size + 1, (by + 1) * size + 1, size - 2, size - 2);
+      } else {
+        drawBlock(hctx, bx + 1, by + 1, hp.color, size);
+      }
     });
   }
 }
