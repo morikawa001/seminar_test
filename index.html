@@ -2,42 +2,52 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>テトリス</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; color: #eee; overflow: hidden; }
-.container { display: flex; gap: 20px; align-items: flex-start; }
-canvas { border: 2px solid #444; background: #0f0f23; }
-.side { display: flex; flex-direction: column; gap: 12px; min-width: 130px; }
-.panel { background: #16213e; border: 2px solid #444; border-radius: 8px; padding: 10px; }
-.panel h3 { font-size: 11px; margin-bottom: 6px; color: #e94560; text-transform: uppercase; letter-spacing: 1px; }
-.panel .value { font-size: 20px; font-weight: bold; }
-.panel .value.hi { color: #f0a000; font-size: 14px; }
-#nextCanvas { background: #0f0f23; border: none; }
-#holdCanvas { background: #0f0f23; border: none; }
-.controls { font-size: 11px; line-height: 1.7; color: #999; }
-.controls kbd { background: #333; border: 1px solid #555; border-radius: 3px; padding: 0 4px; font-size: 10px; color: #eee; }
-#overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.75); z-index: 10; }
-#overlay h1 { font-size: 36px; margin-bottom: 8px; color: #e94560; }
-#overlay p { font-size: 16px; color: #aaa; margin: 2px 0; }
-#overlay .hi { color: #f0a000; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body { background: #e8eaf6; display: flex; justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif; color: #333; }
+.container { display: flex; gap: 16px; align-items: flex-start; }
+canvas { border: 2px solid #9fa8da; background: #fff; border-radius: 4px; }
+.side { display: flex; flex-direction: column; gap: 10px; min-width: 120px; }
+.panel { background: #fff; border: 2px solid #9fa8da; border-radius: 8px; padding: 10px; }
+.panel h3 { font-size: 11px; margin-bottom: 5px; color: #e91e63; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+.panel .value { font-size: 20px; font-weight: bold; color: #333; }
+.panel .value.hi { color: #ff9800; font-size: 14px; }
+#nextCanvas, #holdCanvas { background: #fff; border: none; }
+.controls { font-size: 10px; line-height: 1.6; color: #666; }
+.controls kbd { background: #e8eaf6; border: 1px solid #9fa8da; border-radius: 3px; padding: 0 4px; font-size: 10px; color: #333; }
+#overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.88); z-index: 10; border-radius: 4px; }
+#overlay h1 { font-size: 32px; margin-bottom: 8px; color: #e91e63; }
+#overlay p { font-size: 15px; color: #555; margin: 2px 0; }
+#overlay .hi { color: #ff9800; }
 .game-wrapper { position: relative; }
-.combo-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 28px; font-weight: bold; color: #fff; text-shadow: 0 0 10px rgba(233,69,96,0.8); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 5; }
+.combo-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: bold; color: #e91e63; text-shadow: 0 0 8px rgba(233,30,99,0.3); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 5; }
 .combo-display.show { opacity: 1; }
 .line-clear-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 4; transition: opacity 0.1s; }
-.btn-quit { position: absolute; top: 8px; right: 8px; background: #e94560; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; z-index: 20; }
-.btn-quit:hover { background: #c73650; }
-.touch-controls { display: none; position: fixed; bottom: 10px; left: 0; right: 0; justify-content: space-around; padding: 0 10px; z-index: 20; }
-.touch-btn { width: 56px; height: 56px; border-radius: 12px; border: 2px solid #555; background: #16213e; color: #eee; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
-.touch-btn:active { background: #e94560; border-color: #e94560; }
-.touch-row { display: flex; gap: 8px; }
-@media (max-width: 600px) {
-  .container { flex-direction: column; align-items: center; gap: 8px; }
-  .side { flex-direction: row; flex-wrap: wrap; gap: 8px; justify-content: center; min-width: auto; }
+.btn-quit { position: absolute; top: 6px; right: 6px; background: #e91e63; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; z-index: 20; font-weight: bold; }
+.btn-quit:hover { background: #c2185b; }
+.touch-controls { display: none; position: fixed; bottom: 12px; left: 0; right: 0; justify-content: center; gap: 40px; padding: 0 16px; z-index: 20; }
+.touch-btn { width: 52px; height: 52px; border-radius: 14px; border: 2px solid #9fa8da; background: #fff; color: #333; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+.touch-btn:active { background: #e91e63; border-color: #e91e63; color: #fff; }
+.touch-row { display: flex; gap: 10px; }
+@media (max-width: 500px) {
+  body { align-items: flex-start; padding-top: 6px; }
+  .container { flex-direction: column; align-items: center; gap: 6px; }
+  .game-wrapper canvas { width: min(85vw, 280px); height: auto; aspect-ratio: 1/2; }
+  .side { flex-direction: row; flex-wrap: wrap; gap: 6px; justify-content: center; min-width: auto; max-width: 90vw; }
+  .side .panel { padding: 6px 8px; }
+  .side .panel h3 { font-size: 9px; margin-bottom: 3px; }
+  .side .panel .value { font-size: 15px; }
+  .side .panel .value.hi { font-size: 11px; }
   .side .controls { display: none; }
   .touch-controls { display: flex; }
-  canvas { width: 240px; height: 480px; }
+  #nextCanvas { width: 80px; height: 160px; }
+  #holdCanvas { width: 80px; height: 55px; }
+}
+@media (min-width: 501px) and (max-height: 700px) {
+  body { align-items: flex-start; padding-top: 10px; }
 }
 </style>
 </head>
@@ -53,11 +63,11 @@ canvas { border: 2px solid #444; background: #0f0f23; }
   <div class="side">
     <div class="panel">
       <h3>HOLD</h3>
-      <canvas id="holdCanvas" width="110" height="70"></canvas>
+      <canvas id="holdCanvas" width="100" height="60"></canvas>
     </div>
     <div class="panel">
       <h3>NEXT</h3>
-      <canvas id="nextCanvas" width="110" height="210"></canvas>
+      <canvas id="nextCanvas" width="100" height="180"></canvas>
     </div>
     <div class="panel">
       <h3>SCORE</h3>
@@ -114,13 +124,13 @@ const flash = document.getElementById('flash');
 const btnQuit = document.getElementById('btnQuit');
 
 const PIECES = {
-  I: { shape: [[0,0],[1,0],[2,0],[3,0]], color: '#4ff7f7' },
-  O: { shape: [[0,0],[1,0],[0,1],[1,1]], color: '#fff44f' },
-  T: { shape: [[0,0],[1,0],[2,0],[1,1]], color: '#c76cff' },
-  S: { shape: [[1,0],[2,0],[0,1],[1,1]], color: '#5ef77a' },
-  Z: { shape: [[0,0],[1,0],[1,1],[2,1]], color: '#ff5555' },
-  J: { shape: [[0,0],[0,1],[1,1],[2,1]], color: '#5577ff' },
-  L: { shape: [[2,0],[0,1],[1,1],[2,1]], color: '#ffaa33' }
+  I: { shape: [[0,0],[1,0],[2,0],[3,0]], color: '#00e5ff', dark: '#0097a7' },
+  O: { shape: [[0,0],[1,0],[0,1],[1,1]], color: '#ffeb3b', dark: '#f9a825' },
+  T: { shape: [[0,0],[1,0],[2,0],[1,1]], color: '#e040fb', dark: '#9c27b0' },
+  S: { shape: [[1,0],[2,0],[0,1],[1,1]], color: '#69f0ae', dark: '#2e7d32' },
+  Z: { shape: [[0,0],[1,0],[1,1],[2,1]], color: '#ff5252', dark: '#c62828' },
+  J: { shape: [[0,0],[0,1],[1,1],[2,1]], color: '#448aff', dark: '#1565c0' },
+  L: { shape: [[2,0],[0,1],[1,1],[2,1]], color: '#ffab40', dark: '#e65100' }
 };
 const PIECE_NAMES = Object.keys(PIECES);
 
@@ -179,7 +189,7 @@ function nextFromBag() {
   if (bag.length === 0) bag = createBag();
   const name = bag.pop();
   const p = PIECES[name];
-  return { name, blocks: p.shape.map(b => [...b]), color: p.color, x: 3, y: 0 };
+  return { name, blocks: p.shape.map(b => [...b]), color: p.color, dark: p.dark, x: 3, y: 0 };
 }
 
 function collides(piece, dx, dy) {
@@ -206,38 +216,24 @@ function lock() {
   currentPiece.blocks.forEach(([bx, by]) => {
     const gy = currentPiece.y + by;
     const gx = currentPiece.x + bx;
-    if (gy >= 0) grid[gy][gx] = currentPiece.color;
+    if (gy >= 0) grid[gy][gx] = { color: currentPiece.color, dark: currentPiece.dark };
   });
   sfxLock();
   const cleared = clearLines();
-  if (cleared > 0) {
-    sfxLine(cleared);
-    showFlash();
-  }
+  if (cleared > 0) { sfxLine(cleared); showFlash(); }
 
   const tspin = isTSpin();
-  let pts = 0;
-  if (tspin) {
-    pts = [0, 800, 1200, 1600, 2000][cleared] * level;
-  } else {
-    pts = [0, 100, 300, 500, 800][cleared] * level;
-  }
+  let pts = tspin
+    ? [0, 800, 1200, 1600, 2000][cleared] * level
+    : [0, 100, 300, 500, 800][cleared] * level;
 
-  if (cleared > 0) {
-    combo++;
-    pts += 50 * combo * level;
-  } else {
-    combo = 0;
-  }
-
+  if (cleared > 0) { combo++; pts += 50 * combo * level; } else { combo = 0; }
   if (combo >= 2) showCombo(combo);
 
   score += pts;
   holdUsed = false;
-
   currentPiece = nextQueue.shift();
   nextQueue.push(nextFromBag());
-
   if (collides(currentPiece, 0, 0)) endGame();
   updateUI();
 }
@@ -268,10 +264,11 @@ function hold() {
   const held = currentPiece;
   if (holdPiece) {
     currentPiece = holdPiece;
-    currentPiece.x = 3; currentPiece.y = 0; currentPiece.blocks = PIECES[currentPiece.name].shape.map(b => [...b]);
-    holdPiece = { name: held.name, color: held.color };
+    currentPiece.x = 3; currentPiece.y = 0;
+    currentPiece.blocks = PIECES[currentPiece.name].shape.map(b => [...b]);
+    holdPiece = { name: held.name, color: held.color, dark: held.dark };
   } else {
-    holdPiece = { name: held.name, color: held.color };
+    holdPiece = { name: held.name, color: held.color, dark: held.dark };
     currentPiece = nextQueue.shift();
     nextQueue.push(nextFromBag());
   }
@@ -305,16 +302,32 @@ function hardDrop() {
   lock();
 }
 
-function drawBlock(context, x, y, color, size) {
+function drawBlock(context, x, y, gem, size) {
   const px = x * size + 1;
   const py = y * size + 1;
   const s = size - 2;
-  context.fillStyle = color;
-  context.fillRect(px, py, s, s);
-  context.fillStyle = 'rgba(255,255,255,0.25)';
-  context.fillRect(px, py, s, 3);
-  context.fillStyle = 'rgba(0,0,0,0.15)';
-  context.fillRect(px, py + s - 3, s, 3);
+  const base = gem.color || gem;
+  const dark = gem.dark || gem;
+  const cx = px + s / 2;
+  const cy = py + s / 2;
+
+  const grad = context.createLinearGradient(px, py, px + s, py + s);
+  grad.addColorStop(0, base);
+  grad.addColorStop(1, dark);
+  context.fillStyle = grad;
+  context.beginPath();
+  context.roundRect(px, py, s, s, 3);
+  context.fill();
+
+  context.fillStyle = 'rgba(255,255,255,0.45)';
+  context.beginPath();
+  context.roundRect(px + 2, py + 2, s - 4, s * 0.4, 2);
+  context.fill();
+
+  context.fillStyle = 'rgba(255,255,255,0.15)';
+  context.beginPath();
+  context.arc(cx - s * 0.15, cy - s * 0.1, s * 0.12, 0, Math.PI * 2);
+  context.fill();
 }
 
 function drawGhost() {
@@ -325,14 +338,14 @@ function drawGhost() {
   currentPiece.blocks.forEach(([bx, by]) => {
     const px = currentPiece.x + bx;
     const py = currentPiece.y + by + gy;
-    if (py >= 0) drawBlock(ctx, px, py, currentPiece.color, BLOCK);
+    if (py >= 0) drawBlock(ctx, px, py, currentPiece, BLOCK);
   });
   ctx.globalAlpha = 1;
 }
 
 function draw() {
   ctx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
-  ctx.strokeStyle = '#1a1a3e';
+  ctx.strokeStyle = '#e0e0e0';
   for (let x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x*BLOCK,0); ctx.lineTo(x*BLOCK,ROWS*BLOCK); ctx.stroke(); }
   for (let y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0,y*BLOCK); ctx.lineTo(COLS*BLOCK,y*BLOCK); ctx.stroke(); }
   grid.forEach((row, y) => row.forEach((c, x) => { if (c) drawBlock(ctx, x, y, c, BLOCK); }));
@@ -340,30 +353,32 @@ function draw() {
     drawGhost();
     currentPiece.blocks.forEach(([bx, by]) => {
       const py = currentPiece.y + by;
-      if (py >= 0) drawBlock(ctx, currentPiece.x + bx, py, currentPiece.color, BLOCK);
+      if (py >= 0) drawBlock(ctx, currentPiece.x + bx, py, currentPiece, BLOCK);
     });
   }
 
-  nctx.clearRect(0, 0, 110, 210);
+  nctx.clearRect(0, 0, 100, 180);
   nextQueue.forEach((p, i) => {
-    const size = 22;
+    const size = 20;
     const np = PIECES[p.name];
     const ox = 1, oy = i * 4 + 1;
     np.shape.forEach(([bx, by]) => {
-      drawBlock(nctx, bx + ox, by + oy, np.color, size);
+      drawBlock(nctx, bx + ox, by + oy, np, size);
     });
   });
 
-  hctx.clearRect(0, 0, 110, 70);
+  hctx.clearRect(0, 0, 100, 60);
   if (holdPiece) {
-    const size = 22;
+    const size = 18;
     const hp = PIECES[holdPiece.name];
     hp.shape.forEach(([bx, by]) => {
       if (holdUsed) {
-        hctx.fillStyle = '#444';
-        hctx.fillRect((bx + 1) * size + 1, (by + 1) * size + 1, size - 2, size - 2);
+        hctx.fillStyle = '#ccc';
+        hctx.beginPath();
+        hctx.roundRect((bx + 1) * size + 1, (by + 1) * size + 1, size - 2, size - 2, 2);
+        hctx.fill();
       } else {
-        drawBlock(hctx, bx + 1, by + 1, hp.color, size);
+        drawBlock(hctx, bx + 1, by + 1, holdPiece, size);
       }
     });
   }
@@ -425,9 +440,7 @@ function startGame() {
 }
 
 function quitGame() {
-  if (!gameOver && !paused) {
-    endGame();
-  }
+  if (!gameOver) endGame();
 }
 
 function endGame() {
