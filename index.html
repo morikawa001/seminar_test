@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テトリス</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; color: #eee; }
+.container { display: flex; gap: 24px; align-items: flex-start; }
+canvas { border: 2px solid #444; background: #0f0f23; }
+.side { display: flex; flex-direction: column; gap: 16px; min-width: 140px; }
+.panel { background: #16213e; border: 2px solid #444; border-radius: 8px; padding: 12px; }
+.panel h3 { font-size: 13px; margin-bottom: 8px; color: #e94560; text-transform: uppercase; letter-spacing: 1px; }
+.panel .value { font-size: 22px; font-weight: bold; }
+#nextCanvas { background: #0f0f23; border: none; }
+.controls { font-size: 12px; line-height: 1.8; color: #aaa; }
+.controls kbd { background: #333; border: 1px solid #555; border-radius: 3px; padding: 1px 5px; font-size: 11px; color: #eee; }
+#overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.7); z-index: 10; }
+#overlay h1 { font-size: 36px; margin-bottom: 12px; color: #e94560; }
+#overlay p { font-size: 16px; color: #aaa; }
+.game-wrapper { position: relative; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="game-wrapper">
+    <canvas id="board" width="300" height="600"></canvas>
+    <div id="overlay"><h1>テトリス</h1><p>Enterキーでスタート</p></div>
+  </div>
+  <div class="side">
+    <div class="panel">
+      <h3>NEXT</h3>
+      <canvas id="nextCanvas" width="120" height="120"></canvas>
+    </div>
+    <div class="panel">
+      <h3>SCORE</h3>
+      <div class="value" id="score">0</div>
+    </div>
+    <div class="panel">
+      <h3>LINES</h3>
+      <div class="value" id="lines">0</div>
+    </div>
+    <div class="panel">
+      <h3>LEVEL</h3>
+      <div class="value" id="level">1</div>
+    </div>
+    <div class="panel controls">
+      <h3>操作</h3>
+      <kbd>←</kbd> <kbd>→</kbd> 移動<br>
+      <kbd>↑</kbd> 回転<br>
+      <kbd>↓</kbd> ソフトドロップ<br>
+      <kbd>Space</kbd> ハードドロップ<br>
+      <kbd>P</kbd> 一時停止
+    </div>
+  </div>
+</div>
+
+<script>
+const COLS = 10, ROWS = 20, BLOCK = 30;
+const boardCanvas = document.getElementById('board');
+const ctx = boardCanvas.getContext('2d');
+const nextCanvas = document.getElementById('nextCanvas');
+const nctx = nextCanvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+
+const PIECES = {
+  I: { shape: [[0,0],[1,0],[2,0],[3,0]], color: '#00f0f0' },
+  O: { shape: [[0,0],[1,0],[0,1],[1,1]], color: '#f0f000' },
+  T: { shape: [[0,0],[1,0],[2,0],[1,1]], color: '#a000f0' },
+  S: { shape: [[1,0],[2,0],[0,1],[1,1]], color: '#00f000' },
+  Z: { shape: [[0,0],[1,0],[1,1],[2,1]], color: '#f00000' },
+  J: { shape: [[0,0],[0,1],[1,1],[2,1]], color: '#0000f0' },
+  L: { shape: [[2,0],[0,1],[1,1],[2,1]], color: '#f0a000' }
+};
+const PIECE_NAMES = Object.keys(PIECES);
+
+let grid, score, lines, level, currentPiece, nextPiece, gameOver = true, paused, dropInterval, lastDrop, animId;
+
+function initGrid() {
+  grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+}
+
+function randomPiece() {
+  const name = PIECE_NAMES[Math.floor(Math.random() * PIECE_NAMES.length)];
+  const p = PIECES[name];
+  return {
+    blocks: p.shape.map(b => [...b]),
+    color: p.color,
+    x: 3, y: 0
+  };
+}
+
+function collides(piece, dx, dy) {
+  return piece.blocks.some(([bx, by]) => {
+    const nx = piece.x + bx + dx;
+    const ny = piece.y + by + dy;
+    return nx < 0 || nx >= COLS || ny >= ROWS || (ny >= 0 && grid[ny][nx]);
+  });
+}
+
+function lock() {
+  currentPiece.blocks.forEach(([bx, by]) => {
+    const gy = currentPiece.y + by;
+    const gx = currentPiece.x + bx;
+    if (gy >= 0) grid[gy][gx] = currentPiece.color;
+  });
+  clearLines();
+  currentPiece = nextPiece;
+  nextPiece = randomPiece();
+  if (collides(currentPiece, 0, 0)) endGame();
+}
+
+function clearLines() {
+  let cleared = 0;
+  for (let y = ROWS - 1; y >= 0; y--) {
+    if (grid[y].every(c => c !== null)) {
+      grid.splice(y, 1);
+      grid.unshift(Array(COLS).fill(null));
+      cleared++;
+      y++;
+    }
+  }
+  if (cleared > 0) {
+    const pts = [0, 100, 300, 500, 800];
+    score += pts[cleared] * level;
+    lines += cleared;
+    level = Math.floor(lines / 10) + 1;
+    dropInterval = Math.max(50, 1000 - (level - 1) * 80);
+    updateUI();
+  }
+}
+
+function rotate() {
+  const rotated = currentPiece.blocks.map(([x, y]) => [-y, x]);
+  const minX = Math.min(...rotated.map(b => b[0]));
+  const minY = Math.min(...rotated.map(b => b[1]));
+  const normalized = rotated.map(([x, y]) => [x - minX, y - minY]);
+  const old = currentPiece.blocks;
+  currentPiece.blocks = normalized;
+  // wall kicks
+  const kicks = [0, -1, 1, -2, 2];
+  for (const dx of kicks) {
+    if (!collides(currentPiece, dx, 0)) { currentPiece.x += dx; return; }
+  }
+  currentPiece.blocks = old;
+}
+
+function hardDrop() {
+  while (!collides(currentPiece, 0, 1)) currentPiece.y++;
+  score += 2;
+  lock();
+  updateUI();
+}
+
+function drawBlock(context, x, y, color, size) {
+  context.fillStyle = color;
+  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+  context.fillStyle = 'rgba(255,255,255,0.15)';
+  context.fillRect(x * size + 1, y * size + 1, size - 2, 3);
+}
+
+function drawGhost() {
+  let gy = 0;
+  while (!collides(currentPiece, 0, gy + 1)) gy++;
+  if (gy === 0) return;
+  currentPiece.blocks.forEach(([bx, by]) => {
+    const px = currentPiece.x + bx;
+    const py = currentPiece.y + by + gy;
+    if (py >= 0) {
+      ctx.strokeStyle = currentPiece.color;
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.3;
+      ctx.strokeRect(px * BLOCK + 1, py * BLOCK + 1, BLOCK - 2, BLOCK - 2);
+      ctx.globalAlpha = 1;
+    }
+  });
+}
+
+function draw() {
+  ctx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
+  // grid lines
+  ctx.strokeStyle = '#1a1a3e';
+  for (let x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x*BLOCK,0); ctx.lineTo(x*BLOCK,ROWS*BLOCK); ctx.stroke(); }
+  for (let y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0,y*BLOCK); ctx.lineTo(COLS*BLOCK,y*BLOCK); ctx.stroke(); }
+  // locked blocks
+  grid.forEach((row, y) => row.forEach((c, x) => { if (c) drawBlock(ctx, x, y, c, BLOCK); }));
+  // ghost + current
+  if (currentPiece) {
+    drawGhost();
+    currentPiece.blocks.forEach(([bx, by]) => {
+      const py = currentPiece.y + by;
+      if (py >= 0) drawBlock(ctx, currentPiece.x + bx, py, currentPiece.color, BLOCK);
+    });
+  }
+  // next
+  nctx.clearRect(0, 0, 120, 120);
+  if (nextPiece) {
+    const size = 25;
+    const ox = 1, oy = 1;
+    nextPiece.blocks.forEach(([bx, by]) => {
+      nctx.fillStyle = nextPiece.color;
+      nctx.fillRect((bx+ox)*size+1, (by+oy)*size+1, size-2, size-2);
+    });
+  }
+}
+
+function updateUI() {
+  document.getElementById('score').textContent = score.toLocaleString();
+  document.getElementById('lines').textContent = lines;
+  document.getElementById('level').textContent = level;
+}
+
+function gameLoop(time) {
+  if (gameOver || paused) return;
+  if (!lastDrop) lastDrop = time;
+  if (time - lastDrop > dropInterval) {
+    if (!collides(currentPiece, 0, 1)) {
+      currentPiece.y++;
+    } else {
+      lock();
+    }
+    lastDrop = time;
+    updateUI();
+  }
+  draw();
+  animId = requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+  initGrid();
+  score = 0; lines = 0; level = 1;
+  dropInterval = 1000; lastDrop = 0;
+  gameOver = false; paused = false;
+  currentPiece = randomPiece();
+  nextPiece = randomPiece();
+  updateUI();
+  overlay.style.display = 'none';
+  animId = requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+  gameOver = true;
+  cancelAnimationFrame(animId);
+  overlay.innerHTML = `<h1>ゲームオーバー</h1><p>スコア: ${score.toLocaleString()}</p><p>Enterキーでリトライ</p>`;
+  overlay.style.display = 'flex';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && gameOver) { startGame(); return; }
+  if (!currentPiece || gameOver) return;
+  if (e.key === 'p' || e.key === 'P') {
+    paused = !paused;
+    if (!paused) animId = requestAnimationFrame(gameLoop);
+    return;
+  }
+  if (paused) return;
+  switch (e.key) {
+    case 'ArrowLeft': if (!collides(currentPiece,-1,0)) currentPiece.x--; break;
+    case 'ArrowRight': if (!collides(currentPiece,1,0)) currentPiece.x++; break;
+    case 'ArrowDown': if (!collides(currentPiece,0,1)) { currentPiece.y++; score++; updateUI(); } break;
+    case 'ArrowUp': rotate(); break;
+    case ' ': hardDrop(); break;
+  }
+  e.preventDefault();
+  draw();
+});
+
+draw();
+</script>
+</body>
+</html>
