@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ドッグテトリス</title>
+<title>テトリス</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; color: #eee; overflow: hidden; }
@@ -26,6 +26,8 @@ canvas { border: 2px solid #444; background: #0f0f23; }
 .combo-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 28px; font-weight: bold; color: #fff; text-shadow: 0 0 10px rgba(233,69,96,0.8); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 5; }
 .combo-display.show { opacity: 1; }
 .line-clear-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 4; transition: opacity 0.1s; }
+.btn-quit { position: absolute; top: 8px; right: 8px; background: #e94560; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; z-index: 20; }
+.btn-quit:hover { background: #c73650; }
 .touch-controls { display: none; position: fixed; bottom: 10px; left: 0; right: 0; justify-content: space-around; padding: 0 10px; z-index: 20; }
 .touch-btn { width: 56px; height: 56px; border-radius: 12px; border: 2px solid #555; background: #16213e; color: #eee; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 .touch-btn:active { background: #e94560; border-color: #e94560; }
@@ -45,7 +47,8 @@ canvas { border: 2px solid #444; background: #0f0f23; }
     <canvas id="board" width="300" height="600"></canvas>
     <div class="combo-display" id="comboDisplay"></div>
     <div class="line-clear-flash" id="flash"></div>
-    <div id="overlay"><h1>ドッグテトリス</h1><p>Enterキーでスタート</p></div>
+    <button class="btn-quit" id="btnQuit" style="display:none">終了</button>
+    <div id="overlay"><h1>テトリス</h1><p>Enterキーでスタート</p></div>
   </div>
   <div class="side">
     <div class="panel">
@@ -108,15 +111,16 @@ const hctx = holdCanvas.getContext('2d');
 const overlay = document.getElementById('overlay');
 const comboDisplay = document.getElementById('comboDisplay');
 const flash = document.getElementById('flash');
+const btnQuit = document.getElementById('btnQuit');
 
 const PIECES = {
-  I: { shape: [[0,0],[1,0],[2,0],[3,0]], color: '#f0a050', dog: 'shiba' },
-  O: { shape: [[0,0],[1,0],[0,1],[1,1]], color: '#f5f0e0', dog: 'poodle' },
-  T: { shape: [[0,0],[1,0],[2,0],[1,1]], color: '#8090a0', dog: 'husky' },
-  S: { shape: [[1,0],[2,0],[0,1],[1,1]], color: '#d08040', dog: 'corgi' },
-  Z: { shape: [[0,0],[1,0],[1,1],[2,1]], color: '#e8e0d8', dog: 'dal' },
-  J: { shape: [[0,0],[0,1],[1,1],[2,1]], color: '#c8a870', dog: 'chi' },
-  L: { shape: [[2,0],[0,1],[1,1],[2,1]], color: '#d4a050', dog: 'lab' }
+  I: { shape: [[0,0],[1,0],[2,0],[3,0]], color: '#4ff7f7' },
+  O: { shape: [[0,0],[1,0],[0,1],[1,1]], color: '#fff44f' },
+  T: { shape: [[0,0],[1,0],[2,0],[1,1]], color: '#c76cff' },
+  S: { shape: [[1,0],[2,0],[0,1],[1,1]], color: '#5ef77a' },
+  Z: { shape: [[0,0],[1,0],[1,1],[2,1]], color: '#ff5555' },
+  J: { shape: [[0,0],[0,1],[1,1],[2,1]], color: '#5577ff' },
+  L: { shape: [[2,0],[0,1],[1,1],[2,1]], color: '#ffaa33' }
 };
 const PIECE_NAMES = Object.keys(PIECES);
 
@@ -160,9 +164,6 @@ function sfxHold() { playSound(440, 'sine', 0.1, 0.1); }
 function initGrid() {
   grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 }
-
-const COLOR_TO_DOG = {};
-Object.values(PIECES).forEach(p => { COLOR_TO_DOG[p.color] = p.dog; });
 
 function createBag() {
   const bag = [...PIECE_NAMES];
@@ -308,142 +309,12 @@ function drawBlock(context, x, y, color, size) {
   const px = x * size + 1;
   const py = y * size + 1;
   const s = size - 2;
-  const cx = px + s / 2;
-  const cy = py + s / 2;
-  const r = s / 2;
-  const dog = COLOR_TO_DOG[color] || 'shiba';
-
   context.fillStyle = color;
-  context.beginPath();
-  context.arc(cx, cy, r, 0, Math.PI * 2);
-  context.fill();
-
-  if (dog === 'shiba') {
-    drawEarsPointy(context, cx, cy, r, '#d07030');
-    drawFace(context, cx, cy, r, '#fff', '#333', '#f06070');
-  } else if (dog === 'poodle') {
-    drawEarsCurly(context, cx, cy, r, '#e8ddd0');
-    drawFace(context, cx, cy, r, '#fff', '#333', '#f0a0a0');
-  } else if (dog === 'husky') {
-    drawEarsPointy(context, cx, cy, r, '#607080');
-    drawFace(context, cx, cy, r, '#dde8f0', '#2060a0', '#f0a0a0');
-  } else if (dog === 'corgi') {
-    drawEarsBig(context, cx, cy, r, '#e09040');
-    drawFace(context, cx, cy, r, '#f0e0c0', '#333', '#f08080');
-  } else if (dog === 'dal') {
-    drawEarsPointy(context, cx, cy, r, '#ccc');
-    drawSpots(context, cx, cy, r);
-    drawFace(context, cx, cy, r, '#fff', '#333', '#f0a0a0');
-  } else if (dog === 'chi') {
-    drawEarsBig(context, cx, cy, r, '#c0a060');
-    drawFace(context, cx, cy, r, '#e8d8b8', '#333', '#f08080');
-  } else if (dog === 'lab') {
-    drawEarsFloppy(context, cx, cy, r, '#b08030');
-    drawFace(context, cx, cy, r, '#f0d890', '#333', '#f08080');
-  }
-}
-
-function drawEarsPointy(context, cx, cy, r, earColor) {
-  context.fillStyle = earColor;
-  context.beginPath();
-  context.moveTo(cx - r * 0.7, cy - r * 0.5);
-  context.lineTo(cx - r * 0.2, cy - r * 0.95);
-  context.lineTo(cx - r * 0.1, cy - r * 0.4);
-  context.fill();
-  context.beginPath();
-  context.moveTo(cx + r * 0.7, cy - r * 0.5);
-  context.lineTo(cx + r * 0.2, cy - r * 0.95);
-  context.lineTo(cx + r * 0.1, cy - r * 0.4);
-  context.fill();
-}
-
-function drawEarsCurly(context, cx, cy, r, earColor) {
-  context.fillStyle = earColor;
-  context.beginPath();
-  context.arc(cx - r * 0.85, cy - r * 0.3, r * 0.35, 0, Math.PI * 2);
-  context.fill();
-  context.beginPath();
-  context.arc(cx + r * 0.85, cy - r * 0.3, r * 0.35, 0, Math.PI * 2);
-  context.fill();
-}
-
-function drawEarsBig(context, cx, cy, r, earColor) {
-  context.fillStyle = earColor;
-  context.beginPath();
-  context.ellipse(cx - r * 0.8, cy - r * 0.2, r * 0.4, r * 0.6, -0.3, 0, Math.PI * 2);
-  context.fill();
-  context.beginPath();
-  context.ellipse(cx + r * 0.8, cy - r * 0.2, r * 0.4, r * 0.6, 0.3, 0, Math.PI * 2);
-  context.fill();
-}
-
-function drawEarsFloppy(context, cx, cy, r, earColor) {
-  context.fillStyle = earColor;
-  context.beginPath();
-  context.ellipse(cx - r * 0.75, cy + r * 0.1, r * 0.25, r * 0.5, -0.2, 0, Math.PI * 2);
-  context.fill();
-  context.beginPath();
-  context.ellipse(cx + r * 0.75, cy + r * 0.1, r * 0.25, r * 0.5, 0.2, 0, Math.PI * 2);
-  context.fill();
-}
-
-function drawSpots(context, cx, cy, r) {
-  context.fillStyle = '#444';
-  context.beginPath();
-  context.arc(cx - r * 0.3, cy + r * 0.2, r * 0.12, 0, Math.PI * 2);
-  context.fill();
-  context.beginPath();
-  context.arc(cx + r * 0.4, cy + r * 0.35, r * 0.1, 0, Math.PI * 2);
-  context.fill();
-}
-
-function drawFace(context, cx, cy, r, faceColor, eyeColor, cheekColor) {
-  context.fillStyle = faceColor;
-  context.beginPath();
-  context.arc(cx, cy + r * 0.05, r * 0.55, 0, Math.PI * 2);
-  context.fill();
-
-  context.fillStyle = eyeColor;
-  context.beginPath();
-  context.arc(cx - r * 0.25, cy - r * 0.1, r * 0.1, 0, Math.PI * 2);
-  context.fill();
-  context.beginPath();
-  context.arc(cx + r * 0.25, cy - r * 0.1, r * 0.1, 0, Math.PI * 2);
-  context.fill();
-
-  context.fillStyle = '#fff';
-  context.beginPath();
-  context.arc(cx - r * 0.22, cy - r * 0.13, r * 0.04, 0, Math.PI * 2);
-  context.fill();
-  context.beginPath();
-  context.arc(cx + r * 0.28, cy - r * 0.13, r * 0.04, 0, Math.PI * 2);
-  context.fill();
-
-  context.fillStyle = '#222';
-  context.beginPath();
-  context.arc(cx, cy + r * 0.15, r * 0.1, 0, Math.PI * 2);
-  context.fill();
-
-  context.fillStyle = cheekColor;
-  context.globalAlpha = 0.35;
-  context.beginPath();
-  context.arc(cx - r * 0.4, cy + r * 0.15, r * 0.12, 0, Math.PI * 2);
-  context.fill();
-  context.beginPath();
-  context.arc(cx + r * 0.4, cy + r * 0.15, r * 0.12, 0, Math.PI * 2);
-  context.fill();
-  context.globalAlpha = 1;
-
-  context.strokeStyle = '#555';
-  context.lineWidth = 0.8;
-  context.beginPath();
-  context.moveTo(cx, cy + r * 0.25);
-  context.quadraticCurveTo(cx - r * 0.15, cy + r * 0.42, cx - r * 0.25, cy + r * 0.35);
-  context.stroke();
-  context.beginPath();
-  context.moveTo(cx, cy + r * 0.25);
-  context.quadraticCurveTo(cx + r * 0.15, cy + r * 0.42, cx + r * 0.25, cy + r * 0.35);
-  context.stroke();
+  context.fillRect(px, py, s, s);
+  context.fillStyle = 'rgba(255,255,255,0.25)';
+  context.fillRect(px, py, s, 3);
+  context.fillStyle = 'rgba(0,0,0,0.15)';
+  context.fillRect(px, py + s - 3, s, 3);
 }
 
 function drawGhost() {
@@ -457,15 +328,6 @@ function drawGhost() {
     if (py >= 0) drawBlock(ctx, px, py, currentPiece.color, BLOCK);
   });
   ctx.globalAlpha = 1;
-}
-
-function drawPiece(context, piece, offsetX, offsetY, size) {
-  const p = PIECES[piece.name || piece];
-  const blocks = piece.blocks || p.shape;
-  blocks.forEach(([bx, by]) => {
-    context.fillStyle = piece.color || p.color;
-    context.fillRect((bx + offsetX) * size + 1, (by + offsetY) * size + 1, size - 2, size - 2);
-  });
 }
 
 function draw() {
@@ -558,13 +420,21 @@ function startGame() {
   nextQueue = [nextFromBag(), nextFromBag(), nextFromBag()];
   updateUI();
   overlay.style.display = 'none';
+  btnQuit.style.display = 'block';
   animId = requestAnimationFrame(gameLoop);
+}
+
+function quitGame() {
+  if (!gameOver && !paused) {
+    endGame();
+  }
 }
 
 function endGame() {
   gameOver = true;
   cancelAnimationFrame(animId);
   sfxGameOver();
+  btnQuit.style.display = 'none';
   if (score > bestScore) {
     bestScore = score;
     localStorage.setItem('tetris_best', bestScore);
@@ -573,6 +443,8 @@ function endGame() {
   overlay.style.display = 'flex';
   draw();
 }
+
+btnQuit.addEventListener('click', quitGame);
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && gameOver) { startGame(); return; }
