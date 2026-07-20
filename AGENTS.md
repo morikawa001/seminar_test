@@ -1,13 +1,12 @@
 # Agents
 
 ## Project Overview
-テトリスゲーム - ブラウザで動作する単一HTMLファイルのテトリス
+RPGアドベンチャー - ブラウザで動作するドラゴンクエスト風RPG
 
 ## Tech Stack
 - HTML5 / CSS3 / JavaScript (ES6+)
 - Canvas API (2D描画)
 - Web Audio API (サウンド生成)
-- localStorage (ハイスコア保存)
 
 ## File Structure
 - `index.html` - 全コード（HTML/CSS/JS統合）
@@ -23,17 +22,15 @@
 - セミコロンあり
 
 ## Game Features
-- 7-bag ピース生成
-- ホールド機能 (Shift)
-- NEXT 3個表示
-- ゴーストピース表示
-- T-spin検出
-- コンボシステム
-- サウンドエフェクト (Web Audio)
-- ハイスコア (localStorage)
-- モバイルタッチ操作対応
-- 終了ボタン
-- レスポンシブ対応（自動スケーリング）
+- タイルベースのフィールド移動
+- コマンド選択式のターン制戦闘
+- 5種類のモンスター + 大魔王ボス
+- 魔法システム（ホイミ・メラ・ベギラマ・ビッグバン）
+- アイテムシステム（ポーション）
+- レベルアップ・ステータス成長
+- 効果音 (Web Audio API)
+- タイトル画面・ゲームオーバー画面
+- セーブ機能（localStorage）
 
 ## GitHub
 - Repository: `https://github.com/morikawa001/seminar_test`
