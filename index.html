@@ -8,46 +8,46 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; }
 body { background: #e8eaf6; display: flex; justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif; color: #333; }
-.container { display: flex; gap: 16px; align-items: flex-start; }
+.container { display: flex; gap: 16px; align-items: flex-start; max-height: 100vh; }
 canvas { border: 2px solid #9fa8da; background: #fff; border-radius: 4px; }
-.side { display: flex; flex-direction: column; gap: 10px; min-width: 120px; }
-.panel { background: #fff; border: 2px solid #9fa8da; border-radius: 8px; padding: 10px; }
-.panel h3 { font-size: 11px; margin-bottom: 5px; color: #e91e63; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-.panel .value { font-size: 20px; font-weight: bold; color: #333; }
-.panel .value.hi { color: #ff9800; font-size: 14px; }
+.side { display: flex; flex-direction: column; gap: 8px; min-width: 110px; }
+.panel { background: #fff; border: 2px solid #9fa8da; border-radius: 8px; padding: 8px; }
+.panel h3 { font-size: 10px; margin-bottom: 4px; color: #e91e63; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+.panel .value { font-size: 18px; font-weight: bold; color: #333; }
+.panel .value.hi { color: #ff9800; font-size: 13px; }
 #nextCanvas, #holdCanvas { background: #fff; border: none; }
-.controls { font-size: 10px; line-height: 1.6; color: #666; }
-.controls kbd { background: #e8eaf6; border: 1px solid #9fa8da; border-radius: 3px; padding: 0 4px; font-size: 10px; color: #333; }
+.controls { font-size: 10px; line-height: 1.5; color: #666; }
+.controls kbd { background: #e8eaf6; border: 1px solid #9fa8da; border-radius: 3px; padding: 0 3px; font-size: 9px; color: #333; }
 #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.88); z-index: 10; border-radius: 4px; }
-#overlay h1 { font-size: 32px; margin-bottom: 8px; color: #e91e63; }
-#overlay p { font-size: 15px; color: #555; margin: 2px 0; }
+#overlay h1 { font-size: 28px; margin-bottom: 8px; color: #e91e63; }
+#overlay p { font-size: 14px; color: #555; margin: 2px 0; }
 #overlay .hi { color: #ff9800; }
-.game-wrapper { position: relative; }
-.combo-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: bold; color: #e91e63; text-shadow: 0 0 8px rgba(233,30,99,0.3); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 5; }
+.game-wrapper { position: relative; flex-shrink: 0; }
+.combo-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 22px; font-weight: bold; color: #e91e63; text-shadow: 0 0 8px rgba(233,30,99,0.3); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 5; }
 .combo-display.show { opacity: 1; }
 .line-clear-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 4; transition: opacity 0.1s; }
-.btn-quit { position: absolute; top: 6px; right: 6px; background: #e91e63; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; z-index: 20; font-weight: bold; }
+.btn-quit { position: absolute; top: 4px; right: 4px; background: #e91e63; color: #fff; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; z-index: 20; font-weight: bold; }
 .btn-quit:hover { background: #c2185b; }
-.touch-controls { display: none; position: fixed; bottom: 12px; left: 0; right: 0; justify-content: center; gap: 40px; padding: 0 16px; z-index: 20; }
-.touch-btn { width: 52px; height: 52px; border-radius: 14px; border: 2px solid #9fa8da; background: #fff; color: #333; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+.touch-controls { display: none; position: fixed; bottom: 10px; left: 0; right: 0; justify-content: center; gap: 30px; padding: 0 16px; z-index: 20; }
+.touch-btn { width: 50px; height: 50px; border-radius: 14px; border: 2px solid #9fa8da; background: #fff; color: #333; font-size: 18px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 .touch-btn:active { background: #e91e63; border-color: #e91e63; color: #fff; }
-.touch-row { display: flex; gap: 10px; }
+.touch-row { display: flex; gap: 8px; }
 @media (max-width: 500px) {
-  body { align-items: flex-start; padding-top: 6px; }
-  .container { flex-direction: column; align-items: center; gap: 6px; }
-  .game-wrapper canvas { width: min(85vw, 280px); height: auto; aspect-ratio: 1/2; }
-  .side { flex-direction: row; flex-wrap: wrap; gap: 6px; justify-content: center; min-width: auto; max-width: 90vw; }
-  .side .panel { padding: 6px 8px; }
-  .side .panel h3 { font-size: 9px; margin-bottom: 3px; }
-  .side .panel .value { font-size: 15px; }
-  .side .panel .value.hi { font-size: 11px; }
+  .container { flex-direction: column; align-items: center; gap: 4px; }
+  .game-wrapper canvas { width: min(80vw, 260px); height: auto; aspect-ratio: 1/2; }
+  .side { flex-direction: row; flex-wrap: wrap; gap: 4px; justify-content: center; min-width: auto; max-width: 90vw; }
+  .side .panel { padding: 4px 6px; }
+  .side .panel h3 { font-size: 8px; margin-bottom: 2px; }
+  .side .panel .value { font-size: 13px; }
+  .side .panel .value.hi { font-size: 10px; }
   .side .controls { display: none; }
   .touch-controls { display: flex; }
-  #nextCanvas { width: 80px; height: 160px; }
-  #holdCanvas { width: 80px; height: 55px; }
+  #nextCanvas { width: 70px; height: 130px; }
+  #holdCanvas { width: 70px; height: 45px; }
 }
-@media (min-width: 501px) and (max-height: 700px) {
-  body { align-items: flex-start; padding-top: 10px; }
+@media (min-height: 700px) and (min-width: 501px) {
+  .container { max-height: 98vh; }
+}
 }
 </style>
 </head>
@@ -495,6 +495,27 @@ document.getElementById('btnHold').addEventListener('touchstart', e => { e.preve
 
 draw();
 document.getElementById('best').textContent = bestScore.toLocaleString();
+
+const container = document.querySelector('.container');
+function fitToScreen() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const cw = container.offsetWidth;
+  const ch = container.offsetHeight;
+  const isMobile = vw <= 500;
+  if (isMobile) {
+    container.style.transform = '';
+    container.style.transformOrigin = '';
+    return;
+  }
+  const scaleX = vw / cw;
+  const scaleY = vh / ch;
+  const scale = Math.min(scaleX, scaleY, 1);
+  container.style.transform = `scale(${scale})`;
+  container.style.transformOrigin = 'center center';
+}
+window.addEventListener('resize', fitToScreen);
+fitToScreen();
 </script>
 </body>
 </html>
